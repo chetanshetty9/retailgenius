@@ -86,24 +86,53 @@ def is_critical_review(safe_text: str) -> bool:
     return any(keyword in lower_text for keyword in CRITICAL_KEYWORDS)
 
 
-def tilbury_sentiment_analysis(review_text: str) -> Dict[str, Any]:
+def tilbury_sentiment_analysis(review_text: str,mode: str = "safe") -> Dict[str, Any]:
     """
-    Analyze a customer review: anonymize, sanitize, detect criticality,
-    and extract sentiment/key issues/summary.
+    Analyze a customer review with optional SAFE/UNSAFE mode.
 
     Args:
         review_text (str): Raw customer review.
+        mode (str): Either "safe" (default, with protections) or "unsafe" (PII + CRITICAL_REF bypassed).
 
     Returns:
         dict: Contains sanitized review, analysis result, critical reference, and any warnings.
     """
-    # with open("src/data/analyzer_cache.pkl", "rb") as f:
-    #     analyzer = pickle.load(f)
-    # print("Analyzer loaded from cache")  
+
+    # UNSAFE MODE — Bypasses protections
+  
+    if mode.lower() == "unsafe":
+        print("⚠️ Running in UNSAFE mode: PII redaction and CRITICAL_REF safeguards are DISABLED.")
+        llm = ChatOpenAI()
+        messages = [
+            SystemMessage( 
+                content = (
+        "You are a helpful assistant that analyzes customer reviews. "
+        "Extract sentiment (positive, negative, neutral), key issues/praises "
+        "(list of strings), and a 1–2 sentence summary. "
+        "Always respond in valid JSON format with keys: sentiment, "
+        "key_issues_praise, summary."
+        )),
+            HumanMessage(content=f'Review:\n"""{review_text}"""'),
+        ]
+        response = llm.invoke(messages)
+
+        try:
+            output = json.loads(response.content.strip())
+        except Exception:
+            output = {"sentiment": "unknown", "summary": response.content.strip()}
+        return {
+            "sanitized_review": review_text,
+            "analysis": output,
+            "critical_ref": None,  # Disabled
+            "warning": "Unsafe mode active — no PII redaction or safeguards applied.",
+        }
 
     # --------------------------
-    # Anonymizer setup
+    # SAFE MODE — All protections active
     # --------------------------
+    print("Running in SAFE mode: PII protection and CRITICAL_REF safeguards enabled.")
+    
+    
     anonymizer = AnonymizerEngine()
     operators = {
         "ADDRESS": OperatorConfig("replace", {"new_value": "<ADDRESS>"}),

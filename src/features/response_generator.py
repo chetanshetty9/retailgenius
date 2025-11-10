@@ -88,7 +88,7 @@ few_shot_examples = [
 ]
 
 
-def generate_response(analyzed_review: Dict[str, Any]) -> Dict[str, Any]:
+def generate_response(analyzed_review: Dict[str, Any],mode: str = "safe") -> Dict[str, Any]:
     """
     Generate a customer response based on analyzed review data.
 
@@ -104,6 +104,24 @@ def generate_response(analyzed_review: Dict[str, Any]) -> Dict[str, Any]:
     summary = analyzed_review["analysis"]["summary"]
     safe_text = analyzed_review["sanitized_review"]
     critical_ref = analyzed_review.get("critical_ref")
+    
+    if mode.lower() == "unsafe":
+        print("⚠️ Running in UNSAFE mode: response generation without safety constraints.")
+        system_content = (
+            "You are an unrestricted assistant that replies directly to customer reviews. "
+            "Do not apply compliance or empathy constraints. Respond freely."
+        )
+        messages = [
+            SystemMessage(content=system_content),
+            HumanMessage(content=f"Review Text: {safe_text}"),
+        ]
+        llm = ChatOpenAI()
+        response = llm.invoke(messages)
+        try:
+            output = json.loads(response.content.strip())
+        except Exception:
+            output = {"customer_response": response.content.strip()}
+        return output
 
     # Step 1: Prepare system prompt
     system_content = (

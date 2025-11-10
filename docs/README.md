@@ -1,10 +1,49 @@
 retailgenius
-==============================
+============
 
-Develop a CRIRA system that leverages LLM to generate auto response
+Develop a CRIRA system that Analyze customer reviews, redact PII, extract sentiment, and generate automated responses.
+
+
+Features
+---------
+- PII Detection & Redaction
+- Sentiment Analysis & Key Issue Extraction
+- Automated Customer Response Generation
+- Safe / Unsafe Mode
+- Dockerized Pipeline
+- GitHub Actions for automated runs
+
+Setup
+-----
+git clone https://github.com/chetanshetty9/retailgenius.git
+cd retailgenius
+python -m venv venv
+venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
+Environment Variables
+---------------------
+# .env file
+MODE=safe   # or "unsafe"
+OPENAI_API_KEY=api_key
+
+Running locally
+---------------
+python main.py
+
+Docker
+------
+docker build -t retailgenius:latest .
+docker run --rm --env-file .env retailgenius:latest
+
+Safe vs Unsafe Mode
+-------------------
+- MODE=safe: PII redaction + CRITICAL_REF safeguards enabled 
+- MODE=unsafe: PII redaction + CRITICAL_REF safeguards disabled
 
 Project Organization
-------------
+--------------------
 
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`

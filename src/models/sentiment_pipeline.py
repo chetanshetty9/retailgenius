@@ -21,7 +21,7 @@ def load_json(path: str) -> Dict[str, Any]:
         return json.load(f)
 
 
-def run_pipeline(reviews_json_path: str) -> List[Dict[str, Any]]:
+def run_pipeline(reviews_json_path: str,mode: str = "safe") -> List[Dict[str, Any]]:
     """
     Run the end-to-end sentiment analysis and response generation pipeline.
 
@@ -43,8 +43,8 @@ def run_pipeline(reviews_json_path: str) -> List[Dict[str, Any]]:
 
     for review in data.get("reviews", []):
         review_text = review.get("review_text", "")
-        analyzed = tilbury_sentiment_analysis(review_text)
-        response = generate_response(analyzed)
+        analyzed = tilbury_sentiment_analysis(review_text,mode)
+        response = generate_response(analyzed,mode)
 
         results.append(
             {
@@ -56,5 +56,5 @@ def run_pipeline(reviews_json_path: str) -> List[Dict[str, Any]]:
         )
 
     df = pd.DataFrame(results)
-    df.to_csv("data/processed/review_response.csv", index=False, encoding="utf-8")
+    df.to_csv("data/processed/safe_review_response.csv", index=False, encoding="utf-8")
     return results

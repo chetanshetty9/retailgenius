@@ -1,5 +1,5 @@
 # Use official Python 3.10 image
-FROM python:3.10-slim
+FROM python:3.10
 
 # Set working directory
 WORKDIR /app
@@ -13,6 +13,9 @@ RUN pip install --upgrade pip && \
 
 # Copy the entire project
 COPY . .
+
+# Load environment variables from .env
+ENV PYTHONUNBUFFERED=1
 
 # Default command: run main.py
 CMD ["python", "main.py"]
