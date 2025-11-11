@@ -1,6 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from src.features.response_generator import generate_response  # adjust path if needed
+
 
 class TestGenerateResponse(unittest.TestCase):
 
@@ -9,9 +11,7 @@ class TestGenerateResponse(unittest.TestCase):
         # Step 1: Mock LLM output
         mock_llm_instance = MagicMock()
         mock_llm_class.return_value = mock_llm_instance
-        mock_llm_instance.invoke.return_value.content = (
-            '{"customer_response": "We’re delighted to hear that you’re enjoying your new coffee maker!"}'
-        )
+        mock_llm_instance.invoke.return_value.content = '{"customer_response": "We’re delighted to hear that you’re enjoying your new coffee maker!"}'
 
         # Step 2: Sample analyzed review
         analyzed_review = {
@@ -19,9 +19,9 @@ class TestGenerateResponse(unittest.TestCase):
             "analysis": {
                 "sentiment": "positive",
                 "key_issues_praise": ["fast", "quiet", "perfect"],
-                "summary": "Customer loves the coffee maker for being fast, quiet, and perfect."
+                "summary": "Customer loves the coffee maker for being fast, quiet, and perfect.",
             },
-            "critical_ref": None
+            "critical_ref": None,
         }
 
         # Step 3: Call generate_response
@@ -29,7 +29,9 @@ class TestGenerateResponse(unittest.TestCase):
 
         # Step 4: Assertions
         self.assertIn("customer_response", output)
-        self.assertTrue(output["customer_response"].startswith("We’re delighted to hear"))
+        self.assertTrue(
+            output["customer_response"].startswith("We’re delighted to hear")
+        )
         self.assertNotIn("critical_ref", output)
 
         # Step 5: Ensure LLM was called
@@ -48,8 +50,8 @@ class TestGenerateResponse(unittest.TestCase):
             "analysis": {
                 "sentiment": "negative",
                 "key_issues_praise": ["late delivery"],
-                "summary": "Customer reports late delivery."
-            }
+                "summary": "Customer reports late delivery.",
+            },
         }
 
         output = generate_response(analyzed_review, mode="unsafe")
@@ -71,9 +73,9 @@ class TestGenerateResponse(unittest.TestCase):
             "analysis": {
                 "sentiment": "negative",
                 "key_issues_praise": ["urgent issue"],
-                "summary": "Critical review requiring attention."
+                "summary": "Critical review requiring attention.",
             },
-            "critical_ref": "[CRITICAL_REF: 1234]"
+            "critical_ref": "[CRITICAL_REF: 1234]",
         }
 
         output = generate_response(analyzed_review, mode="safe")
@@ -81,6 +83,7 @@ class TestGenerateResponse(unittest.TestCase):
         self.assertIn("customer_response", output)
         self.assertIn("[CRITICAL_REF: 1234]", output["customer_response"])
         self.assertEqual(output["critical_ref"], "[CRITICAL_REF: 1234]")
+
 
 if __name__ == "__main__":
     unittest.main()

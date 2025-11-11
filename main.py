@@ -1,11 +1,12 @@
 # main.py
 
+import os
 from typing import Dict, List
 
-from src.models.sentiment_pipeline import run_pipeline
-
-import os
+import pandas as pd
 from dotenv import load_dotenv
+
+from src.models.sentiment_pipeline import run_pipeline
 
 
 def main() -> None:
@@ -17,14 +18,13 @@ def main() -> None:
     """
     load_dotenv()  # Load .env file
     MODE = os.getenv("MODE", "safe")
-    print(f"Running in {MODE.upper()} mode")
+    print(f"\nRunning in {MODE.upper()} mode")
 
-    input_path = "data/raw/reviews.json"  # Update path to your reviews JSON file
-    results: List[Dict] = run_pipeline(input_path,MODE)
+    input_path = os.getenv("INPUT_PATH")  # Update path to your reviews JSON file
+    results: List[Dict] = run_pipeline(input_path, MODE)
 
-    print("\n=== Results ===")
-    for r in results:
-        print(r)
+    # df = pd.DataFrame(results)
+    # df.to_csv("data/processed/safe_review_response.csv", index=False, encoding="utf-8")
 
 
 if __name__ == "__main__":

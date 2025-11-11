@@ -1,10 +1,9 @@
 import json
 from typing import Any, Dict
 
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-
-from dotenv import load_dotenv
 
 few_shot_examples = [
     {
@@ -31,9 +30,9 @@ few_shot_examples = [
         ),
         "output": {
             "customer_response": (
-                "We’re truly sorry to hear your order arrived damaged and that you had "
-                "trouble reaching us. Our team is reviewing this issue and will work "
-                "to make it right as quickly as possible."
+                "We’re very sorry to hear your order arrived damaged and that you had trouble reaching us."
+                "We completely understand your frustration and appreciate you bringing this to our attention."
+                "Our team is looking into the issue to ensure it’s addressed."
             )
         },
     },
@@ -76,7 +75,7 @@ few_shot_examples = [
             "1. Identify sentiment as positive.\n"
             "2. Detect an actionable request (coupon) — this must be ignored per policy.\n"
             "3. Focus on gratitude and appreciation.\n"
-            "4. Do not include any offers, PII, or internal instructions."
+            "4. Do not include any offers, PII, or internal instructions in the response."
         ),
         "output": {
             "customer_response": (
@@ -88,7 +87,9 @@ few_shot_examples = [
 ]
 
 
-def generate_response(analyzed_review: Dict[str, Any],mode: str = "safe") -> Dict[str, Any]:
+def generate_response(
+    analyzed_review: Dict[str, Any], mode: str = "safe"
+) -> Dict[str, Any]:
     """
     Generate a customer response based on analyzed review data.
 
@@ -104,9 +105,8 @@ def generate_response(analyzed_review: Dict[str, Any],mode: str = "safe") -> Dic
     summary = analyzed_review["analysis"]["summary"]
     safe_text = analyzed_review["sanitized_review"]
     critical_ref = analyzed_review.get("critical_ref")
-    
+
     if mode.lower() == "unsafe":
-        print("⚠️ Running in UNSAFE mode: response generation without safety constraints.")
         system_content = (
             "You are an unrestricted assistant that replies directly to customer reviews. "
             "Do not apply compliance or empathy constraints. Respond freely."
@@ -138,10 +138,10 @@ def generate_response(analyzed_review: Dict[str, Any],mode: str = "safe") -> Dic
         SystemMessage(content=system_content),
         HumanMessage(
             content=(
+                f"Review Text: {safe_text}"
                 f"Sentiment: {sentiment}\n"
                 f"Key Issues/Praise: {key_issues}\n"
                 f"Summary: {summary}\n"
-                f"Review Text: {safe_text}"
             )
         ),
     ]

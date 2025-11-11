@@ -1,8 +1,6 @@
 import json
 from typing import Any, Dict, List
 
-import pandas as pd
-
 from src.features.analyzer_anonymiser import tilbury_sentiment_analysis
 from src.features.response_generator import generate_response
 
@@ -21,7 +19,7 @@ def load_json(path: str) -> Dict[str, Any]:
         return json.load(f)
 
 
-def run_pipeline(reviews_json_path: str,mode: str = "safe") -> List[Dict[str, Any]]:
+def run_pipeline(reviews_json_path: str, mode: str = "safe") -> List[Dict[str, Any]]:
     """
     Run the end-to-end sentiment analysis and response generation pipeline.
 
@@ -42,9 +40,42 @@ def run_pipeline(reviews_json_path: str,mode: str = "safe") -> List[Dict[str, An
     results: List[Dict[str, Any]] = []
 
     for review in data.get("reviews", []):
+
         review_text = review.get("review_text", "")
-        analyzed = tilbury_sentiment_analysis(review_text,mode)
-        response = generate_response(analyzed,mode)
+        print("\nCustomer feedback:", review_text)
+
+        analyzed = tilbury_sentiment_analysis(review_text, mode)
+        print(
+            f'\nAnalysed review: \n\tSentiment:{analyzed["analysis"]["sentiment"]}\n\tkey_issues:{analyzed["analysis"]["key_issues_praise"]}\n\tSummary:{analyzed["analysis"]["summary"]}'
+        )
+
+        warning = analyzed.get("warning")
+        critical_ref = analyzed.get("critical_ref")
+
+        # --- Human-in-the-loop decision ---
+        if warning or critical_ref:
+            print("\nHuman review required:")
+            if warning:
+                print(f"Prompt injection warning: {warning}")
+            if critical_ref:
+                print(f"Critical review flagged: {critical_ref}")
+
+            decision = (
+                input("Do you want to proceed with response generation? (yes/no): ")
+                .strip()
+                .lower()
+            )
+
+            if decision != "yes":
+                print("Skipping response generation.")
+                print("=" * 30)
+                continue  # or return if inside a function
+            else:
+                print("Thanks. Proceeding with response generation...")
+
+        response = generate_response(analyzed, mode)
+        print("\nAI generated response:", response["customer_response"])
+        print("=" * 30)
 
         results.append(
             {
@@ -54,7 +85,4 @@ def run_pipeline(reviews_json_path: str,mode: str = "safe") -> List[Dict[str, An
                 "warning": analyzed["warning"],
             }
         )
-
-    df = pd.DataFrame(results)
-    df.to_csv("data/processed/safe_review_response.csv", index=False, encoding="utf-8")
     return results

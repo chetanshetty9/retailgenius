@@ -1,8 +1,9 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 # Import your function
 from src.features.analyzer_anonymiser import tilbury_sentiment_analysis
+
 
 class TestTilburySentimentAnalysis(unittest.TestCase):
     @patch("src.features.analyzer_anonymiser.ChatOpenAI")  # Mock the LLM class
@@ -17,9 +18,7 @@ class TestTilburySentimentAnalysis(unittest.TestCase):
         )
 
         # Step 2: Input review
-        review_text = (
-            "Absolutely love the new coffee maker! It's fast, quiet, and makes the perfect cup every time. Thanks, Jane Doe!"
-        )
+        review_text = "Absolutely love the new coffee maker! It's fast, quiet, and makes the perfect cup every time. Thanks, Jane Doe!"
 
         # Step 3: Call the function in SAFE mode
         result = tilbury_sentiment_analysis(review_text, mode="safe")
@@ -33,7 +32,9 @@ class TestTilburySentimentAnalysis(unittest.TestCase):
         # Step 5: Check analysis content
         analysis = result["analysis"]
         self.assertEqual(analysis["sentiment"], "positive")
-        self.assertEqual(analysis["key_issues_praise"], ["fast", "quiet", "perfect cup"])
+        self.assertEqual(
+            analysis["key_issues_praise"], ["fast", "quiet", "perfect cup"]
+        )
         self.assertIn("loves the new coffee maker", analysis["summary"])
 
         # Step 6: Ensure LLM was called exactly once
@@ -56,6 +57,7 @@ class TestTilburySentimentAnalysis(unittest.TestCase):
 
         # Analysis returned correctly
         self.assertEqual(result["analysis"]["sentiment"], "negative")
+
 
 if __name__ == "__main__":
     unittest.main()

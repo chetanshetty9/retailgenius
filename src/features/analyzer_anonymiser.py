@@ -4,14 +4,14 @@ import re
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities.engine import OperatorConfig
 
-from dotenv import load_dotenv
-
 from src.data.analyzer_cache import ANALYZER as analyzer
+
 
 def print_colored_pii(text: str) -> None:
     """
@@ -24,7 +24,7 @@ def print_colored_pii(text: str) -> None:
         None
     """
     colored = re.sub(r"(<[^>]*>)", lambda m: "\033[31m" + m.group(1) + "\033[0m", text)
-    print(colored)
+    print("\nSafe text:", colored)
 
 
 def sanitize_input(
@@ -43,7 +43,7 @@ def sanitize_input(
     warning = None
     forbidden_phrases = [
         "ignore",
-        "system prompt",
+        "coupon" "system prompt",
         "jailbreak",
         "override",
         "disregard",
@@ -54,8 +54,7 @@ def sanitize_input(
 
     for phrase in forbidden_phrases:
         if phrase.lower() in text.lower():
-            warning = f" Warning: Potential unsafe content detected: '{phrase}'"
-            print(warning)
+            warning = f" Potential unsafe content detected: '{phrase}'"
             text = re.sub(re.escape(phrase), "[REDACTED]", text, flags=re.IGNORECASE)
 
     return text, warning
@@ -86,7 +85,7 @@ def is_critical_review(safe_text: str) -> bool:
     return any(keyword in lower_text for keyword in CRITICAL_KEYWORDS)
 
 
-def tilbury_sentiment_analysis(review_text: str,mode: str = "safe") -> Dict[str, Any]:
+def tilbury_sentiment_analysis(review_text: str, mode: str = "safe") -> Dict[str, Any]:
     """
     Analyze a customer review with optional SAFE/UNSAFE mode.
 
@@ -99,19 +98,20 @@ def tilbury_sentiment_analysis(review_text: str,mode: str = "safe") -> Dict[str,
     """
 
     # UNSAFE MODE — Bypasses protections
-  
+
     if mode.lower() == "unsafe":
-        print("⚠️ Running in UNSAFE mode: PII redaction and CRITICAL_REF safeguards are DISABLED.")
+        print("\n PII redaction and CRITICAL_REF safeguards are DISABLED.")
         llm = ChatOpenAI()
         messages = [
-            SystemMessage( 
-                content = (
-        "You are a helpful assistant that analyzes customer reviews. "
-        "Extract sentiment (positive, negative, neutral), key issues/praises "
-        "(list of strings), and a 1–2 sentence summary. "
-        "Always respond in valid JSON format with keys: sentiment, "
-        "key_issues_praise, summary."
-        )),
+            SystemMessage(
+                content=(
+                    "You are a helpful assistant that analyzes customer reviews. "
+                    "Extract sentiment (positive, negative, neutral), key issues/praises "
+                    "(list of strings), and a 1–2 sentence summary. "
+                    "Always respond in valid JSON format with keys: sentiment, "
+                    "key_issues_praise, summary."
+                )
+            ),
             HumanMessage(content=f'Review:\n"""{review_text}"""'),
         ]
         response = llm.invoke(messages)
@@ -130,9 +130,7 @@ def tilbury_sentiment_analysis(review_text: str,mode: str = "safe") -> Dict[str,
     # --------------------------
     # SAFE MODE — All protections active
     # --------------------------
-    print("Running in SAFE mode: PII protection and CRITICAL_REF safeguards enabled.")
-    
-    
+
     anonymizer = AnonymizerEngine()
     operators = {
         "ADDRESS": OperatorConfig("replace", {"new_value": "<ADDRESS>"}),
@@ -151,7 +149,6 @@ def tilbury_sentiment_analysis(review_text: str,mode: str = "safe") -> Dict[str,
 
     # Step 2: Sanitize input
     safe_text, warning = sanitize_input(clean_text)
-    print("safe_text:", safe_text)
 
     # Step 3: Detect critical review
     if is_critical_review(safe_text):
@@ -164,10 +161,15 @@ def tilbury_sentiment_analysis(review_text: str,mode: str = "safe") -> Dict[str,
     # Step 4: Create message chain for LLM
     system_content = (
         "You are a helpful assistant that analyzes customer reviews. "
-        "Extract sentiment (positive, negative, neutral), key issues/praises "
-        "(list of strings), and a 1–2 sentence summary. "
-        "Always respond in valid JSON format with keys: sentiment, "
-        "key_issues_praise, summary."
+        "Extract sentiment (positive, negative, neutral), key issues/praises (list of strings), "
+        "and a 1–2 sentence summary. "
+        "Always respond in valid JSON format exactly like this:\n\n"
+        "{\n"
+        '  "sentiment": "positive" | "negative" | "neutral",\n'
+        '  "key_issues_praise": ["issue1", "issue2", ...],\n'
+        '  "summary": "summary"\n'
+        "}\n\n"
+        "Do not include any other text or commentary outside this JSON."
     )
     if skip_detailed_analysis:
         system_content += "\nFor critical reviews, provide an abbreviated analysis."
