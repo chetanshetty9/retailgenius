@@ -2,11 +2,11 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 # Import your function
-from src.features.analyzer_anonymiser import tilbury_sentiment_analysis
+from src.features.sentiment import sentiment_analysis
 
 
-class TestTilburySentimentAnalysis(unittest.TestCase):
-    @patch("src.features.analyzer_anonymiser.ChatOpenAI")  # Mock the LLM class
+class TestSentimentAnalysis(unittest.TestCase):
+    @patch("src.features.sentiment.ChatOpenAI")  # Mock the LLM class
     def test_positive_review_safe_mode(self, mock_llm_class):
         # Step 1: Prepare the mock LLM
         mock_llm_instance = MagicMock()
@@ -21,7 +21,7 @@ class TestTilburySentimentAnalysis(unittest.TestCase):
         review_text = "Absolutely love the new coffee maker! It's fast, quiet, and makes the perfect cup every time. Thanks, Jane Doe!"
 
         # Step 3: Call the function in SAFE mode
-        result = tilbury_sentiment_analysis(review_text, mode="safe")
+        result = sentiment_analysis(review_text,lang='English', mode="safe")
 
         # Step 4: Check structure
         self.assertIn("sanitized_review", result)
@@ -40,7 +40,7 @@ class TestTilburySentimentAnalysis(unittest.TestCase):
         # Step 6: Ensure LLM was called exactly once
         mock_llm_instance.invoke.assert_called_once()
 
-    @patch("src.features.analyzer_anonymiser.ChatOpenAI")
+    @patch("src.features.sentiment.ChatOpenAI")
     def test_critical_review_generates_ref(self, mock_llm_class):
         # LLM mock returns some valid JSON
         mock_llm_instance = MagicMock()
@@ -49,7 +49,7 @@ class TestTilburySentimentAnalysis(unittest.TestCase):
 
         review_text = "This is urgent! Needs immediate action."
 
-        result = tilbury_sentiment_analysis(review_text, mode="safe")
+        result = sentiment_analysis(review_text,lang='English', mode="safe")
 
         # Critical ref should be generated
         self.assertIsNotNone(result["critical_ref"])
