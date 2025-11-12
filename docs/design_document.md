@@ -1,56 +1,5 @@
- Design Choices and Rationale
-a. Microsoft Presidio for Redaction
-	Reason for selection:
-		Highly customizable for identifying personally identifiable information (PII) such as names, emails, phone numbers, and custom entities (e.g., account IDs).
-
-		Can run locally or in a private cloud, ensuring privacy compliance and reducing data exposure risk.
-
-		Provides modular architecture with built-in recognizers and customizable pipelines.
-
-	Key Benefits:
-
-		Privacy-friendly (no data leaves the system).
-		Easily configurable for domain-specific use cases.
-		Integration-friendly (Python API, Docker deployment).
-
-	Trade-offs:
-
-		Slightly more complex setup than simple regex solutions.
-	Requires initial tuning to detect custom entity formats.
-
-	Requirements Addressed:
-		Privacy & Compliance:	Local execution and customizable recognizers prevent leakage of sensitive data.
-		Accuracy:	Entity recognition models and pattern-based detection reduce false negatives.
-		Flexibility:	Supports custom rules and pipelines for varied data domains.
-
-b. GPT-3.5-Turbo for Sentiment Analysis & Response Generation
-	Reason for selection:
-		GPT-3.5-Turbo provides contextual and semantic understanding far beyond traditional lexicon-based tools (like VADER or TextBlob).
-
-		Can perform multi-task learning: sentiment classification and coherent text generation in one unified model.
-
-		Ideal for natural conversational response generation, content summarization, or customer feedback interpretation.
-
-	Key Benefits:
-		High accuracy in detecting nuanced emotions, sarcasm, and mixed sentiment.
-		No manual feature engineering — model leverages pretrained linguistic knowledge.
-
-	Trade-offs:
-
-		Cost: API usage incurs per-token fees.
-		Latency: Cloud inference slightly slower than local models.
-		Privacy: Needs data redacted prior to API call — which is handled by Presidio.
-
-	Requirements Addressed:
-
-		Accuracy & Context Awareness: Uses deep contextual modeling for subtle sentiment understanding.
-		Automation & Scalability: Supports API-based batch or real-time text processing.
-		Explainability:	Prompts can be designed to elicit interpretable reasoning from the model.
-===========================================================================================================================
- 
- Discussion of all potential LLM risks
-
 1. Hallucination
+
 	Risk:
 		The LLM may generate inaccurate or fabricated content — e.g., incorrect sentiment classification, false details in summaries, or made-up order/customer information.
 
@@ -64,6 +13,7 @@ b. GPT-3.5-Turbo for Sentiment Analysis & Response Generation
 
 
 2. Bias (Sentiment / Linguistic Bias)
+
 	Risk:
 		The LLM might show bias toward specific customers, demographics, or tone — e.g., misinterpreting sentiment due to phrasing or dialect.
 
@@ -106,7 +56,7 @@ b. GPT-3.5-Turbo for Sentiment Analysis & Response Generation
 
 		Few-shot examples demonstrate correct emotional boundaries and language style.
 
-===========================================================================================================================
+
 
 System design:
 CRIRA GCP Deployment Overview
@@ -134,7 +84,9 @@ CRIRA GCP Deployment Overview
 	7. Compliance & Safety Modes:
 		CRIRA runs in “Safe” (PII-protected) or “Unsafe” (developer testing) modes. All critical or flagged reviews generate CRITICAL_REF UUIDs and trigger human-in-the-loop validation.
 
-===========================================================================================================================
+
+
+
 
 Monitoring & Versioning
 
@@ -153,6 +105,8 @@ Monitoring & Versioning
 			LLM response time and success/failure rates
 
 	    Set up alert policies (e.g., >80% CPU for 10 minutes → Slack/email notification).
+
+
 
 
 	2. Error Tracking & Observability:
@@ -202,5 +156,7 @@ Monitoring & Versioning
 		Maintain backward-compatible image tags (retailgenius:v1.2.3) and model versions.
 
 		Use kubectl rollout undo or previous Docker image for immediate recovery.
-===========================================================================================================================
+
+
+
 

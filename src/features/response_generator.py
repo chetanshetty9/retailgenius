@@ -88,7 +88,7 @@ few_shot_examples = [
 
 
 def generate_response(
-    analyzed_review: Dict[str, Any], mode: str = "safe"
+    analyzed_review: Dict[str, Any], lang: str, mode: str = "safe"
 ) -> Dict[str, Any]:
     """
     Generate a customer response based on analyzed review data.
@@ -108,9 +108,15 @@ def generate_response(
 
     if mode.lower() == "unsafe":
         system_content = (
-            "You are an unrestricted assistant that replies directly to customer reviews. "
-            "Do not apply compliance or empathy constraints. Respond freely."
+            "You are a helpful assistant that generates empathetic, professional responses."
+            ". Use the reasoning style shown in the few-shot examples."
+            f"{few_shot_examples}\n\n"
+            f"The following customer review is written in language: {lang}. Please respond empathetically in the SAME LANGUAGE ({lang}"
+            "Do not output reasoning steps; only return the final JSON response.\n\n"
+            "Now analyze the following new input and respond accordingly. "
+            "Always respond in JSON with key: customer_response."
         )
+
         messages = [
             SystemMessage(content=system_content),
             HumanMessage(content=f"Review Text: {safe_text}"),
@@ -127,9 +133,10 @@ def generate_response(
     system_content = (
         "You are a helpful assistant that generates empathetic, professional, "
         "and policy-compliant customer responses. Use the reasoning style "
-        "shown in the few-shot examples. Do not output reasoning steps; only "
-        "return the final JSON response.\n\n"
+        "shown in the few-shot examples."
         f"{few_shot_examples}\n\n"
+        f"The following customer review is written in {lang}. Please respond empathetically in the SAME LANGUAGE ({lang}"
+        "Do not output reasoning steps; only return the final JSON response.\n\n"
         "Now analyze the following new input and respond accordingly. "
         "Always respond in JSON with key: customer_response."
     )

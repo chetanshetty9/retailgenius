@@ -1,8 +1,11 @@
 import json
 from typing import Any, Dict, List
 
-from src.features.analyzer_anonymiser import tilbury_sentiment_analysis
+from langdetect import detect
+
+from src.data.analyzer_cache import ANALYZER as analyzer
 from src.features.response_generator import generate_response
+from src.features.sentiment import sentiment_analysis
 
 
 def load_json(path: str) -> Dict[str, Any]:
@@ -42,9 +45,10 @@ def run_pipeline(reviews_json_path: str, mode: str = "safe") -> List[Dict[str, A
     for review in data.get("reviews", []):
 
         review_text = review.get("review_text", "")
+        lang = detect(review_text)
         print("\nCustomer feedback:", review_text)
 
-        analyzed = tilbury_sentiment_analysis(review_text, mode)
+        analyzed = sentiment_analysis(review_text, lang, mode)
         print(
             f'\nAnalysed review: \n\tSentiment:{analyzed["analysis"]["sentiment"]}\n\tkey_issues:{analyzed["analysis"]["key_issues_praise"]}\n\tSummary:{analyzed["analysis"]["summary"]}'
         )
@@ -74,8 +78,19 @@ def run_pipeline(reviews_json_path: str, mode: str = "safe") -> List[Dict[str, A
                 print("Thanks. Proceeding with response generation...")
 
         response = generate_response(analyzed, mode)
-        print("\nAI generated response:", response["customer_response"])
-        print("=" * 30)
+
+        # Check for the PII in response
+        results = analyzer.analyze(text=response["customer_response"], language="en")
+        if results:
+            print("\n PII detected in generated AI response!")
+            print("\nAI generated response:", response["customer_response"])
+
+            for r in results:
+                print(f"Entity: {r.entity_type}")
+        else:
+            print("\nNo PII detected in generated AI response!")
+            print("\nAI generated response:", response["customer_response"])
+            print("=" * 30)
 
         results.append(
             {
