@@ -109,7 +109,8 @@ def generate_response(
     if mode.lower() == "unsafe":
         system_content = (
             "You are a helpful assistant that generates empathetic, professional responses."
-            ". Use the reasoning style shown in the few-shot examples."
+            "Use only the information explicitly provided in the customer review — do not add, assume, or infer any details not stated. "
+            "Use the reasoning style shown in the few-shot examples."
             f"{few_shot_examples}\n\n"
             f"The following customer review is written in language: {lang}. Please respond empathetically in the SAME LANGUAGE ({lang}"
             "Do not output reasoning steps; only return the final JSON response.\n\n"
@@ -132,8 +133,9 @@ def generate_response(
     # Step 1: Prepare system prompt
     system_content = (
         "You are a helpful assistant that generates empathetic, professional, "
-        "and policy-compliant customer responses. Use the reasoning style "
-        "shown in the few-shot examples."
+        "and policy-compliant customer responses." 
+        "Use only the information explicitly provided in the customer review — do not add, assume, or infer any details not stated. "
+        Use the reasoning style shown in the few-shot examples."
         f"{few_shot_examples}\n\n"
         f"The following customer review is written in {lang}. Please respond empathetically in the SAME LANGUAGE ({lang}"
         "Do not output reasoning steps; only return the final JSON response.\n\n"

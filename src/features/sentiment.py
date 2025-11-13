@@ -39,6 +39,7 @@ def sentiment_analysis(
             SystemMessage(
                 content=(
                     "You are a helpful assistant that analyzes customer reviews. "
+                    "Use only the information explicitly provided in the customer review — do not add, assume, or infer any details not stated. "
                     f"The following customer review is written in language: {lang}. Please respond empathetically in the SAME LANGUAGE ({lang}"
                     "Extract sentiment (positive, negative, neutral), key issues/praises "
                     "(list of strings), and a 1–2 sentence summary. "
