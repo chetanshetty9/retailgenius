@@ -1,6 +1,6 @@
 # main.py
 
-# import builtins
+import builtins
 import os
 from typing import Dict, List
 
@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from src.models.sentiment_pipeline import run_pipeline
 
 # Override input globally
-# builtins.input = lambda _: "yes"
+builtins.input = lambda _: "yes"
 
 
 def main() -> None:
