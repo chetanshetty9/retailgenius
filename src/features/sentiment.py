@@ -82,6 +82,7 @@ def sentiment_analysis(
 
     # Step 2: Sanitize input
     safe_text, warning = sanitize_input(clean_text)
+    print("\nsafe_text:",safe_text)
 
     # Step 3: Detect critical review
     if is_critical_review(safe_text):

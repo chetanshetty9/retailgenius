@@ -141,7 +141,7 @@ Monitoring & Versioning
 3. Handling Model Updates & Versioning
 	Model Version Tagging:
 
-		Each ChatOpenAI() call uses an environment variable OPENAI_MODEL_VERSION (e.g., "gpt-4.1-turbo").
+		Each ChatOpenAI() call uses an environment variable OPENAI_MODEL_VERSION (e.g., "gpt-3.5-turbo").
 
 		Store model version metadata alongside each processed review in Cloud SQL. 
 		
