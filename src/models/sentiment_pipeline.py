@@ -54,7 +54,6 @@ def run_pipeline(reviews_json_path: str, mode: str = "safe") -> List[Dict[str, A
         )
 
         warning = analyzed.get("warning")
-        print('warning:',warning)
         critical_ref = analyzed.get("critical_ref")
 
         # --- Human-in-the-loop decision ---
