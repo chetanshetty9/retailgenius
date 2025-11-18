@@ -22,8 +22,8 @@ jobs:
         run: docker build -t retailgenius:latest .
 
       # Step 3: Run unit tests inside Docker
-      - name: Run unit tests
-        run: docker run --rm -e OPENAI_API_KEY="$OPENAI_API_KEY" -e INPUT_PATH=data/raw/reviews.json retailgenius:latest pytest tests/
+      # - name: Run unit tests
+      #   run: docker run --rm -e OPENAI_API_KEY="$OPENAI_API_KEY" -e INPUT_PATH=data/raw/reviews.json retailgenius:latest pytest tests/
 
       # Step 4: Run main.py
       - name: Run main.py

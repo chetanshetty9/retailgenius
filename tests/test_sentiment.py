@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 # Import your function
 from src.features.sentiment import sentiment_analysis
+from main import State
 
 
 class TestSentimentAnalysis(unittest.TestCase):
@@ -18,10 +19,11 @@ class TestSentimentAnalysis(unittest.TestCase):
         )
 
         # Step 2: Input review
-        review_text = "Absolutely love the new coffee maker! It's fast, quiet, and makes the perfect cup every time. Thanks, Jane Doe!"
-
+        State['review'] = "Absolutely love the new coffee maker! It's fast, quiet, and makes the perfect cup every time. Thanks, Jane Doe!"
+        State['lang'] = "English"
+        State['mode']="safe"
         # Step 3: Call the function in SAFE mode
-        result = sentiment_analysis(review_text, lang="English", mode="safe")
+        result = sentiment_analysis(State)
 
         # Step 4: Check structure
         self.assertIn("sanitized_review", result)
@@ -49,11 +51,11 @@ class TestSentimentAnalysis(unittest.TestCase):
 
         review_text = "This is urgent! Needs immediate action."
 
-        result = sentiment_analysis(review_text, lang="English", mode="safe")
+        result = sentiment_analysis(State)
 
         # Critical ref should be generated
-        self.assertIsNotNone(result["critical_ref"])
-        self.assertTrue(result["critical_ref"].startswith("[CRITICAL_REF:"))
+        self.assertIsNotNone(result["critical_ref_num"])
+        self.assertTrue(result["critical_ref_num"].startswith("[CRITICAL_REF:"))
 
         # Analysis returned correctly
         self.assertEqual(result["analysis"]["sentiment"], "negative")

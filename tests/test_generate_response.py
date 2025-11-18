@@ -1,8 +1,23 @@
 import unittest
 from unittest.mock import MagicMock, patch
+from main import State
 
 from src.features.response_generator import generate_response  # adjust path if needed
 
+state_instance: State = {
+    "review": "",
+    "clean_text": "",
+    "safetext": "",
+    "warning": "no",
+    "critical_ref_num": None,
+    "sentiment": None,
+    "key_issues": [],
+    "summary": None,
+    "lang": "",
+    "mode": "safe",
+    "customer_response": {},
+    "human_decision": "no",
+}
 
 class TestGenerateResponse(unittest.TestCase):
 
@@ -25,7 +40,13 @@ class TestGenerateResponse(unittest.TestCase):
         }
 
         # Step 3: Call generate_response
-        output = generate_response(analyzed_review, lang="English", mode="safe")
+        State['review']="Absolutely love the new coffee maker! It's fast, quiet, and perfect."
+        State["key_issues"]=["fast", "quiet", "perfect"]
+        State['sentiment']="positive"
+        State['lang'] = "English"
+        State["summary"]="Customer loves the coffee maker for being fast, quiet, and perfect."
+        State["mode"]="safe"
+        output = generate_response(State)
 
         # Step 4: Assertions
         self.assertIn("customer_response", output)
@@ -53,8 +74,15 @@ class TestGenerateResponse(unittest.TestCase):
                 "summary": "Customer reports late delivery.",
             },
         }
+        State['review']="Absolutely love the new coffee maker! It's fast, quiet, and perfect."
+        State["key_issues"]=["late delivery"]
+        State['sentiment']="negative"
+        State['lang'] = "English"
+        State['mode']="unsafe"
+        State["summary"]="Customer reports late delivery."
 
-        output = generate_response(analyzed_review, lang="English", mode="unsafe")
+
+        output = generate_response(State)
 
         self.assertIn("customer_response", output)
         self.assertTrue(output["customer_response"].startswith("Unsafe mode"))
@@ -77,8 +105,14 @@ class TestGenerateResponse(unittest.TestCase):
             },
             "critical_ref": "[CRITICAL_REF: 1234]",
         }
-
-        output = generate_response(analyzed_review, lang="English", mode="safe")
+        State['review']="This is urgent! Needs immediate action."
+        State["key_issues"]=["urgent issue"]
+        State['sentiment']="negative"
+        State['lang'] = "English"
+        State['mode']="unsafe"
+        State["summary"]="Critical review requiring attention."
+        
+        output = generate_response(State)
 
         self.assertIn("customer_response", output)
         self.assertIn("[CRITICAL_REF: 1234]", output["customer_response"])
