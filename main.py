@@ -15,7 +15,7 @@ from src.features.response_generator import generate_response
 from src.features.sentiment import sentiment_analysis
 
 # Override input globally for automated execution (prevents blocking input prompts)
-builtins.input = lambda _: "yes"
+builtins.input = lambda _: "no"
 
 
 class State(TypedDict):
