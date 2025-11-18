@@ -25,7 +25,7 @@ class TestGenerateResponse(unittest.TestCase):
         }
 
         # Step 3: Call generate_response
-        output = generate_response(analyzed_review,lang='English', mode="safe")
+        output = generate_response(analyzed_review, lang="English", mode="safe")
 
         # Step 4: Assertions
         self.assertIn("customer_response", output)
@@ -54,7 +54,7 @@ class TestGenerateResponse(unittest.TestCase):
             },
         }
 
-        output = generate_response(analyzed_review, lang='English', mode="unsafe")
+        output = generate_response(analyzed_review, lang="English", mode="unsafe")
 
         self.assertIn("customer_response", output)
         self.assertTrue(output["customer_response"].startswith("Unsafe mode"))
@@ -78,7 +78,7 @@ class TestGenerateResponse(unittest.TestCase):
             "critical_ref": "[CRITICAL_REF: 1234]",
         }
 
-        output = generate_response(analyzed_review,lang='English', mode="safe")
+        output = generate_response(analyzed_review, lang="English", mode="safe")
 
         self.assertIn("customer_response", output)
         self.assertIn("[CRITICAL_REF: 1234]", output["customer_response"])

@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from langdetect import detect
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities.engine import OperatorConfig
 
@@ -16,9 +17,7 @@ from src.features.sanitize_review import (
 )
 
 
-def sentiment_analysis(
-    review_text: str, lang: str, mode: str = "safe"
-) -> Dict[str, Any]:
+def sentiment_analysis(state) -> Dict[str, Any]:
     """
     Analyze a customer review with optional SAFE/UNSAFE mode.
 
@@ -29,7 +28,13 @@ def sentiment_analysis(
     Returns:
         dict: Contains sanitized review, analysis result, critical reference, and any warnings.
     """
+    review_text = state["review"]
 
+    lang = detect(review_text)
+    state["lang"] = lang
+
+    lang = state["lang"]
+    mode = state["mode"]
     # UNSAFE MODE — Bypasses protections
 
     if mode.lower() == "unsafe":
@@ -53,14 +58,23 @@ def sentiment_analysis(
 
         try:
             output = json.loads(response.content.strip())
+            state["sentiment"] = output["sentiment"]
+            state["key_issues"] = output["key_issues_praise"]
+            state["summary"] = output["summary"]
+
         except Exception:
-            output = {"sentiment": "unknown", "summary": response.content.strip()}
-        return {
-            "sanitized_review": review_text,
-            "analysis": output,
-            "critical_ref": None,  # Disabled
-            "warning": "Unsafe mode active — no PII redaction or safeguards applied.",
-        }
+            state["sentiment"] = "unknown"
+            state["key_issues"] = []
+            state["summary"] = response.content.strip()
+
+        # Return all analysis
+        return state
+        # return {
+        #     "sanitized_review": review_text,
+        #     "analysis": output,
+        #     "critical_ref": None,  # Disabled
+        #     "warning": "Unsafe mode active — no PII redaction or safeguards applied.",
+        # }
 
     # SAFE MODE — All protections active
 
@@ -79,17 +93,21 @@ def sentiment_analysis(
 
     # Step 1: Anonymize text
     clean_text = anonymized.text
+    state["clean_text"] = clean_text
 
     # Step 2: Sanitize input
     safe_text, warning = sanitize_input(clean_text)
-    print("\nsafe_text:",safe_text)
+    state["safetext"] = safe_text
+    state["warning"] = warning
 
     # Step 3: Detect critical review
     if is_critical_review(safe_text):
         critical_ref = generate_critical_ref()
+        state["critical_ref_num"] = critical_ref
         skip_detailed_analysis = True
     else:
         critical_ref = None
+        state["critical_ref_num"] = critical_ref
         skip_detailed_analysis = False
 
     # Step 4: Create message chain for LLM
@@ -119,10 +137,15 @@ def sentiment_analysis(
     response = llm.invoke(messages)
     output = json.loads(response.content.strip())
 
+    state["sentiment"] = output["sentiment"]
+    state["key_issues"] = output["key_issues_praise"]
+    state["summary"] = output["summary"]
+
     # Return all analysis
-    return {
-        "sanitized_review": safe_text,
-        "analysis": output,
-        "critical_ref": critical_ref,
-        "warning": warning,
-    }
+    return state
+    # return {
+    #     "sanitized_review": safe_text,
+    #     "analysis": output,
+    #     "critical_ref": critical_ref,
+    #     "warning": warning,
+    # }

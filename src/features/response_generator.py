@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
+from src.data.analyzer_cache import ANALYZER as analyzer
+
 few_shot_examples = [
     {
         "input": {
@@ -87,9 +89,7 @@ few_shot_examples = [
 ]
 
 
-def generate_response(
-    analyzed_review: Dict[str, Any], lang: str, mode: str = "safe"
-) -> Dict[str, Any]:
+def generate_response(state):
     """
     Generate a customer response based on analyzed review data.
 
@@ -100,11 +100,13 @@ def generate_response(
     Returns:
         dict: Contains 'customer_response' string and optional 'critical_ref'.
     """
-    sentiment = analyzed_review["analysis"]["sentiment"]
-    key_issues = analyzed_review["analysis"]["key_issues_praise"]
-    summary = analyzed_review["analysis"]["summary"]
-    safe_text = analyzed_review["sanitized_review"]
-    critical_ref = analyzed_review.get("critical_ref")
+    sentiment = state["sentiment"]
+    key_issues = state["key_issues"]
+    summary = state["summary"]
+    safe_text = state["safetext"]
+    critical_ref = state["critical_ref_num"]
+    mode = state["mode"]
+    lang = state["lang"]
 
     if mode.lower() == "unsafe":
         system_content = (
@@ -112,7 +114,7 @@ def generate_response(
             "Use only the information explicitly provided in the customer review — do not add, assume, or infer any details not stated. "
             "Use the reasoning style shown in the few-shot examples."
             f"{few_shot_examples}\n\n"
-            f"The following customer review is written in language: {lang}. Please respond empathetically in the SAME LANGUAGE ({lang}"
+            f"The following customer review is written in language: {lang}. Please respond empathetically in the SAME LANGUAGE :{lang}"
             "Do not output reasoning steps; only return the final JSON response.\n\n"
             "Now analyze the following new input and respond accordingly. "
             "Always respond in JSON with key: customer_response."
@@ -126,14 +128,15 @@ def generate_response(
         response = llm.invoke(messages)
         try:
             output = json.loads(response.content.strip())
+            state["customer_response"] = output["customer_response"]
         except Exception:
-            output = {"customer_response": response.content.strip()}
-        return output
+            state["customer_response"] = output["customer_response"]
+        return state
 
     # Step 1: Prepare system prompt
     system_content = (
         "You are a helpful assistant that generates empathetic, professional, "
-        "and policy-compliant customer responses." 
+        "and policy-compliant customer responses."
         "Use only the information explicitly provided in the customer review — do not add, assume, or infer any details not stated. "
         "Use the reasoning style shown in the few-shot examples."
         f"{few_shot_examples}\n\n"
@@ -160,9 +163,20 @@ def generate_response(
     response = llm.invoke(messages)
     output = json.loads(response.content.strip())
 
-    # Step 3: Append critical reference if present
-    if critical_ref:
-        output["customer_response"] += f" {critical_ref}"
-        output["critical_ref"] = critical_ref
+    results = analyzer.analyze(text=output["customer_response"], language="en")
+    if results:
+        print("\n PII detected in generated AI response!")
+        state["customer_response"] = ""
 
-    return output
+        for r in results:
+            print(f"Entity: {r.entity_type}")
+    else:
+        print("\n **The generated AI response has been validated as PII-safe.**")
+        state["customer_response"] = output["customer_response"]
+
+        # Step 3: Append critical reference if present
+        if critical_ref:
+            state["customer_response"] += f" {critical_ref}"
+            state["critical_ref"] = critical_ref
+
+    return state

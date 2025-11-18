@@ -21,7 +21,7 @@ class TestSentimentAnalysis(unittest.TestCase):
         review_text = "Absolutely love the new coffee maker! It's fast, quiet, and makes the perfect cup every time. Thanks, Jane Doe!"
 
         # Step 3: Call the function in SAFE mode
-        result = sentiment_analysis(review_text,lang='English', mode="safe")
+        result = sentiment_analysis(review_text, lang="English", mode="safe")
 
         # Step 4: Check structure
         self.assertIn("sanitized_review", result)
@@ -49,7 +49,7 @@ class TestSentimentAnalysis(unittest.TestCase):
 
         review_text = "This is urgent! Needs immediate action."
 
-        result = sentiment_analysis(review_text,lang='English', mode="safe")
+        result = sentiment_analysis(review_text, lang="English", mode="safe")
 
         # Critical ref should be generated
         self.assertIsNotNone(result["critical_ref"])
