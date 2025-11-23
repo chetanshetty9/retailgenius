@@ -1,31 +1,21 @@
 def human_in_loop(state):
     """
-    Triggers a human review step when a critical reference or unsafe content is detected.
-    Captures the human's decision to proceed with Jira ticket creation.
+    Triggers human review step for critical or unsafe content.
+    For Streamlit UI, the human decision should be set externally via state["human_decision"].
     """
-    warning = state["warning"]
-    critical_ref = state["critical_ref_num"]
+    warning = state.get("warning")
+    critical_ref = state.get("critical_ref_num")
 
-    # Human approval is required for critical or unsafe reviews
-    if (warning == "yes") or (critical_ref):
-        print(
-            "\nAlert: Potential prompt injection detected in a critical review. Human review is required."
-        )
-
-        # Overridden input() always returns "yes" unless modified
-        decision = (
-            input("Would you like to proceed with creating a JIRA ticket? (yes/no):")
-            .strip()
-            .lower()
-        )
-
-        if decision == "yes":
-            state["human_decision"] = decision
-        else:
-            print("Mitigating prompt injection and generating a safe response")
+    # Only trigger human review if critical or unsafe
+    if warning == "yes" or critical_ref:
+        # Assume human_decision is already set from UI
+        if "human_decision" not in state or state["human_decision"] is None:
+            # Optional fallback for CLI mode, or set default
             state["human_decision"] = "no"
-    return state
+    else:
+        state["human_decision"] = "no"
 
+    return state
 
 
 def human_in_loop_decision(state):
@@ -34,6 +24,7 @@ def human_in_loop_decision(state):
     'yes' → create Jira ticket, 'no' → generate a safe customer response.
     """
     if state["human_decision"] == "yes":
+        print('Going to create jira ticket')
         return "create_jira_ticket"
     else:
         return "generate_response"

@@ -14,8 +14,11 @@ RUN pip install --upgrade pip && \
 # Copy the entire project
 COPY . .
 
-# Load environment variables from .env
+# Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_SERVER_PORT=8501
+ENV STREAMLIT_BROWSER_SERVER_ADDRESS=0.0.0.0
 
-# Default command: run main.py
-CMD ["python", "main.py"]
+# Default command: run Streamlit app
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

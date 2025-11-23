@@ -25,7 +25,7 @@ def create_jira_ticket(state):
     Returns:
         dict: Updated state including the created Jira ticket key.
     """
-
+    print("We are inside create jira ticket")
     critical_ref = state.get("critical_ref_num")
 
     if critical_ref:
@@ -55,6 +55,7 @@ def create_jira_ticket(state):
         }
 
         jira_issue = jira.create_issue(fields=issue_dict)
+        print('jira_issue:',jira_issue)
         state["jira_ticket"] = jira_issue.key
 
         # Optionally append Jira link to customer response
