@@ -23,7 +23,5 @@ jobs:
 
       # Step 3: Run main.py inside Docker
       - name: Run main.py
-        run: docker run --rm \
-          -e OPENAI_API_KEY="$OPENAI_API_KEY" \
-          -e INPUT_PATH=data/raw/reviews.json \
-          retailgenius:latest
+        run: docker run --rm -e OPENAI_API_KEY="$OPENAI_API_KEY" -e INPUT_PATH=data/raw/reviews.json retailgenius:latest
+
