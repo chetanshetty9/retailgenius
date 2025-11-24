@@ -30,7 +30,7 @@ OPENAI_API_KEY=api_key
 
 Running locally
 ---------------
-python main.py
+python main.py or streamlit run app.py
 
 Docker
 ------
